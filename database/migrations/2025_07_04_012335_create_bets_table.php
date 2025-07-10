@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->decimal('odd_at_bet', 5, 2);
 
-            $table->foreignId('status_id')->constrained('statuses')->onDelete('restrict');
+            $table->foreignId('status_id')->constrained('status')->onDelete('restrict');
 
             $table->decimal('return_amount', 10, 2)->nullable();
 
