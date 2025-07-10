@@ -25,6 +25,11 @@ return new class extends Migration
 
             $table->timestamps();
         });
+
+        Schema::table('apostas', function (Blueprint $table) {
+            $table->dropForeign(['game_id']); // se tiver FK
+            $table->dropColumn('game_id');
+        });
     }
 
     /**

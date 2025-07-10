@@ -22,7 +22,7 @@ export default function CreateGame() {
       },
       {
         title: 'Criar Jogo',
-        href: '/games/create',
+        href: '/bets/create',
     },
   ];
 

@@ -14,13 +14,18 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Criar Jogo',
-        href: '/games/create',
+        title: 'Criar Aposta',
+        href: '/bets/create',
         icon: PlusIcon,
     },
     {
-        title: 'Lista de Jogos',
-        href: '/games/list',
+        title: 'Lista de Apostas',
+        href: '/bets/list',
+        icon: ListIcon,
+    },
+    {
+        title: 'Bancas',
+        href: '/bancas/list',
         icon: ListIcon,
     },
 ];

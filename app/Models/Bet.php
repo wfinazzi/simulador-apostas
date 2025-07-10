@@ -26,4 +26,19 @@ class Bet extends Model
     {
         return $this->belongsTo(Game::class);
     }
+
+    public function banca()
+    {
+        return $this->belongsTo(Banca::class);
+    }
+
+    public function tipoAposta()
+    {
+        return $this->belongsTo(TiposAposta::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class, 'status');
+    }
 }
