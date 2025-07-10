@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-
+            $table->foreignId('banca_id')->nullable()->constrained()->onDelete('cascade');
 
             $table->enum('bet_option', ['home', 'draw', 'away']); // Aposta feita
             $table->decimal('amount', 10, 2);                     // Valor apostado
