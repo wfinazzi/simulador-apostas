@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('bets', function (Blueprint $table) {
-            $table->string('time_casa')->after('game_id');
+            $table->string('time_casa')->after('banca_id');
             $table->string('time_visitante')->after('time_casa');
         });
     }
