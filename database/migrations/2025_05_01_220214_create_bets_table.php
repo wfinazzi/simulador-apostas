@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignId('game_id')->constrained()->onDelete('cascade');
+
 
             $table->enum('bet_option', ['home', 'draw', 'away']); // Aposta feita
             $table->decimal('amount', 10, 2);                     // Valor apostado
@@ -24,11 +24,6 @@ return new class extends Migration
             $table->decimal('return_amount', 10, 2)->nullable();  // Valor de retorno, se ganhar
 
             $table->timestamps();
-        });
-
-        Schema::table('apostas', function (Blueprint $table) {
-            $table->dropForeign(['game_id']); // se tiver FK
-            $table->dropColumn('game_id');
         });
     }
 
