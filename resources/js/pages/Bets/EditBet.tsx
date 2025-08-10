@@ -22,7 +22,7 @@ export default function EditBet() {
 
   const [bancas, setBancas] = useState([]);
   const [tiposApostas, setTiposApostas] = useState([]);
-  const [statuses, setStatuses] = useState([]);
+  const [status, setStatus] = useState([]);
   const [form, setForm] = useState({
     banca_id: "",
     user_id: "",
@@ -43,13 +43,13 @@ export default function EditBet() {
     comentario: "",
   });
 
-  console.log(statuses);
+  console.log(status);
 
   useEffect(() => {
     axios.get("/api/bancas").then((res) => setBancas(res.data));
     axios.get("/api/tipos_apostas").then((res) => setTiposApostas(res.data));
 
-    axios.get("/api/apostas/status").then((res) => setStatuses(res.data));
+    axios.get("/api/apostas/status").then((res) => setStatus(res.data));
     axios
       .get(`/api/bets/${id}`)
       .then((res) => {
@@ -203,13 +203,13 @@ export default function EditBet() {
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o resultado">
-                  {statuses.find((s) => String(s.id) === form.status_id)?.nome}
+                  {status.find((s) => String(s.id) === form.status_id)?.nome}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {statuses.map((status) => (
-                  <SelectItem key={status.id} value={String(status.id)}>
-                    {status.nome}
+                {status.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.nome}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -23,7 +23,7 @@ export default function CreateBet() {
     odd_at_bet: "",
     amount: "",
     relacao_com_banca: "",
-    status: "",
+    status_id: "",
     return_amount: "",
     comentario: "",
   });
@@ -38,11 +38,11 @@ export default function CreateBet() {
       .catch(() => toast.error("Erro ao carregar tipos de aposta"));
   }, []);
 
-  const [statuses, setStatuses] = useState([]);
+  const [status, setStatus] = useState([]);
 
     useEffect(() => {
     axios.get("/api/apostas/status")
-        .then(res => setStatuses(res.data))
+        .then(res => setStatus(res.data))
         .catch(() => toast.error("Erro ao carregar status"));
     }, []);
 
@@ -207,18 +207,18 @@ export default function CreateBet() {
           <div>
             <Label htmlFor="status">Resultado</Label>
             <Select
-            name="status"
+            name="status_id"
             value={form.status_id}
             onValueChange={(val) => setForm((prev) => ({ ...prev, status_id: val }))}
             required
             >
             <SelectTrigger>
                 <SelectValue placeholder="Selecione o resultado">
-                {statuses.find(s => String(s.id) === form.status_id)?.nome}
+                {status.find(s => String(s.id) === form.status_id)?.nome}
                 </SelectValue>
             </SelectTrigger>
             <SelectContent>
-                {statuses.map((s) => (
+                {status.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>
                     {s.nome}
                 </SelectItem>

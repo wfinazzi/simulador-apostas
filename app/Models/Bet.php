@@ -13,7 +13,7 @@ class Bet extends Model
         'bet_option',
         'amount',
         'odd_at_bet',
-        'status',
+        'status_id',
         'return_amount',
     ];
 
@@ -39,6 +39,6 @@ class Bet extends Model
 
     public function status(): BelongsTo
     {
-        return $this->belongsTo(Status::class, 'status');
+        return $this->belongsTo(Status::class, 'status_id');
     }
 }
