@@ -1,75 +1,75 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
+import { Head } from "@inertiajs/react";
 import axios from "axios";
+import { toast } from "sonner";
+import AppLayout from "@/layouts/app-layout";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
-import { Card, CardContent } from "@/components/ui/card";
 
-import { PieLabelRenderProps } from 'recharts';
-
-const renderStatusLabel = (props: PieLabelRenderProps) => {
-  const {
-    cx, cy, midAngle, innerRadius, outerRadius, percent, index, payload
-  } = props;
-
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  const config = statusConfig[payload.status_name] ?? statusConfig['Desconhecido'];
-
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="black"
-      textAnchor={x > cx ? 'start' : 'end'}
-      dominantBaseline="central"
-      fontSize={12}
-    >
-      {`${config.icon} ${payload.status_name} (${payload.total} | ${(percent * 100).toFixed(1)}%)`}
-    </text>
-  );
+// Função para renderizar o rótulo do status no gráfico de pizza
+const renderStatusLabel = (entry: any) => {
+  const config = statusConfig[entry.name] || statusConfig["Desconhecido"];
+  return `${config.icon} ${entry.name}`;
 };
 
-const renderOptionLabel = (props: PieLabelRenderProps) => {
-  const {
-    cx, cy, midAngle, innerRadius, outerRadius, percent, index, payload
-  } = props;
-
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="black"
-      textAnchor={x > cx ? 'start' : 'end'}
-      dominantBaseline="central"
-      fontSize={12}
-    >
-      {`${payload.option_name} (${payload.total} | ${(percent * 100).toFixed(1)}%)`}
-    </text>
-  );
+// Função para renderizar o rótulo da opção no gráfico de pizza
+const renderOptionLabel = (entry: any) => {
+  return entry.name;
 };
 
-const colors = ["#22c55e", "#ef4444", "#3b82f6", "#facc15"];
+// Configuração de cores e ícones para status
+const statusConfig = {
+  "Ganhou": { color: "#10b981", icon: "✅" },
+  "Perdeu": { color: "#ef4444", icon: "❌" },
+  "Cancelada": { color: "#6b7280", icon: "🚫" },
+  "Aguardando": { color: "#f59e0b", icon: "⏳" },
+  "Desconhecido": { color: "#9ca3af", icon: "❓" },
+};
 
-const statusConfig: Record<string, { color: string; icon: string }> = {
-  'Ganha':      { color: '#22c55e', icon: '🟢' },
-  'Perdida':    { color: '#ef4444', icon: '🔴' },
-  'Cashout':    { color: '#facc15', icon: '💰' },
-  'Em aberto':  { color: '#3b82f6', icon: '⏳' },
-  'Desconhecido': { color: '#9ca3af', icon: '❓' },
+// Cores para o gráfico de tipos de apostas
+const optionColors = [
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#f43f5e",
+  "#f97316",
+  "#eab308",
+  "#84cc16",
+  "#14b8a6",
+  "#06b6d4",
+  "#6366f1",
+];
+
+// Formatador de dinheiro
+const formatMoney = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+};
+
+// Formatador de porcentagem
+const formatPercent = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value / 100);
 };
 
 interface Bet {
@@ -106,166 +106,174 @@ interface DashboardData {
   latest_bets: Bet[];
 }
 
-
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-
-];
-
 export default function Dashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    const [data, setData] = useState<DashboardData | null>(null);
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get<DashboardData>("/api/dashboard")
+      .then((res) => setData(res.data))
+      .catch(() => toast.error("Erro ao carregar dados do dashboard"))
+      .finally(() => setLoading(false));
+  }, []);
 
-    useEffect(() => {
-        axios.get("/api/dashboard").then((res) => {
-            setData(res.data);
-        });
-    }, []);
-
-    if (!data) return <div className="p-4">Carregando...</div>;
-
-
+  if (loading || !data) {
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            {/* <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
-            </div> */}
-             <div className="p-6 grid gap-6">
-      {/* Cards principais */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <p>Total de Apostas</p>
-            <h2 className="text-xl font-bold">{data.total_bets}</h2>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p>Valor Apostado</p>
-            <h2 className="text-xl font-bold">R$ {data.total_amount.toFixed(2)}</h2>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p>Retorno</p>
-            <h2 className="text-xl font-bold">R$ {data.total_return.toFixed(2)}</h2>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p>Lucro</p>
-            <h2 className={`text-xl font-bold ${data.profit >= 0 ? "text-green-600" : "text-red-600"}`}>
-              R$ {data.profit.toFixed(2)}
-            </h2>
-          </CardContent>
-        </Card>
-      </div>
+      <AppLayout>
+        <Head title="Dashboard" />
+        <div className="p-6">
+          <p className="text-center">Carregando dados...</p>
+        </div>
+      </AppLayout>
+    );
+  }
 
-      {/* Gráfico de linha: lucro por dia */}
-      <Card>
-        <CardContent className="p-4">
-          <p className="mb-2 font-medium">Lucro por dia</p>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data.profit_per_day}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="profit" stroke="#10b981" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+  return (
+    <AppLayout>
+      <Head title="Dashboard" />
+      <div className="p-6">
+        <h2 className="text-3xl font-bold mb-6">Dashboard</h2>
 
-      {/* Gráficos de pizza */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        {/* Cards de estatísticas principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Total de Apostas</p>
+              <p className="text-2xl font-bold">{data.total_bets}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Valor Apostado</p>
+              <p className="text-2xl font-bold">{formatMoney(data.total_amount)}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Retorno Total</p>
+              <p className="text-2xl font-bold">{formatMoney(data.total_return)}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">Lucro/Prejuízo</p>
+              <p
+                className={`text-2xl font-bold ${data.profit >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {formatMoney(data.profit)} ({formatPercent(data.roi)})
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gráfico de linha - Lucro por dia */}
+        <Card className="mb-6">
           <CardContent className="p-4">
-            <p className="mb-2 font-medium">Apostas por Status</p>
+            <p className="mb-2 font-medium">Lucro por Dia</p>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
+              <LineChart data={data.profit_per_day}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <RechartsTooltip
+                  formatter={(value: number) => [formatMoney(value), "Lucro"]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#3b82f6"
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Gráficos de pizza */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <p className="mb-2 font-medium">Apostas por Status</p>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
                     data={data.bets_by_status}
                     dataKey="total"
                     nameKey="status_name"
                     outerRadius={100}
-                    label={renderStatusLabel} // ← aqui está a mágica
-                >
+                    label={renderStatusLabel}
+                  >
                     {data.bets_by_status.map((entry, i) => {
-                        const config = statusConfig[entry.status_name] ?? statusConfig['Desconhecido'];
-                        return <Cell key={i} fill={config.color} />;
+                      const config = statusConfig[entry.status_name] ?? statusConfig["Desconhecido"];
+                      return <Cell key={i} fill={config.color} />;
                     })}
-                </Pie>
-                <Tooltip
-                    formatter={(value: any, name: any, props: any) => {
-                        const { payload } = props;
-                        const total = data.bets_by_status.reduce((sum, s) => sum + s.total, 0);
-                        const percent = ((payload.total / total) * 100).toFixed(1);
-                        const config = statusConfig[payload.status_name] ?? statusConfig['Desconhecido'];
+                  </Pie>
+                  <RechartsTooltip
+                    formatter={(value: number, name: string, props: { payload: { total: number; status_name: string } }) => {
+                      const { payload } = props;
+                      const total = data.bets_by_status.reduce((sum, s) => sum + s.total, 0);
+                      const percent = ((payload.total / total) * 100).toFixed(1);
+                      const config = statusConfig[payload.status_name] ?? statusConfig["Desconhecido"];
 
-                        return [
+                      return [
                         `${payload.total} apostas (${percent}%)`,
                         `${config.icon} ${payload.status_name}`
-                        ];
+                      ];
                     }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <p className="mb-2 font-medium">Apostas por Tipo</p>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
+          <Card>
+            <CardContent className="p-4">
+              <p className="mb-2 font-medium">Apostas por Tipo</p>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
                     data={data.bets_by_option}
                     dataKey="total"
                     nameKey="option_name"
                     outerRadius={100}
-                    label={renderOptionLabel} // ← aqui
-                >
-                    {data.bets_by_option.map((_, i) => (
-                        <Cell key={i} fill={colors[i % colors.length]} />
+                    label={renderOptionLabel}
+                  >
+                    {data.bets_by_option.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={optionColors[i % optionColors.length]}
+                      />
                     ))}
-                </Pie>
-                <Tooltip
-                    formatter={(value: any, name: any, props: any) => {
-                        const { payload } = props;
-                        const total = data.bets_by_option.reduce((sum, o) => sum + o.total, 0);
-                        const percent = ((payload.total / total) * 100).toFixed(1);
-                        return [`${payload.total} apostas (${percent}%)`, payload.option_name];
+                  </Pie>
+                  <RechartsTooltip
+                    formatter={(value: number, name: string, props: { payload: { total: number; option_name: string } }) => {
+                      const { payload } = props;
+                      const total = data.bets_by_option.reduce((sum, o) => sum + o.total, 0);
+                      const percent = ((payload.total / total) * 100).toFixed(1);
+                      return [
+                        `${payload.total} apostas (${percent}%)`,
+                        payload.option_name
+                      ];
                     }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabela de últimas apostas */}
         <Card>
-            <CardContent className="p-4 overflow-x-auto">
-                <p className="mb-4 font-medium">Últimas Apostas</p>
+            <CardContent className="p-4">
+                <p className="mb-2 font-medium">Últimas Apostas</p>
                 <table className="w-full text-sm">
-                <thead className="text-left border-b">
-                    <tr>
+                <thead className="text-left">
+                    <tr className="border-b">
                     <th>Jogo</th>
                     <th className="text-right">Odd</th>
                     <th className="text-right">Valor</th>
@@ -292,7 +300,6 @@ export default function Dashboard() {
             </CardContent>
         </Card>
       </div>
-    </div>
-        </AppLayout>
-    );
+    </AppLayout>
+  );
 }

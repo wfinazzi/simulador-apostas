@@ -8,7 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function EditBanca({ banca }) {
+interface Banca {
+  id: number;
+  nome: string;
+  valor_inicial: string;
+  data_inicio: string;
+  observacao: string;
+}
+
+interface EditBancaProps {
+  banca: Banca;
+}
+
+export default function EditBanca({ banca }: EditBancaProps) {
   const [form, setForm] = useState({
     nome: banca.nome || "",
     valor_inicial: banca.valor_inicial || "",
@@ -16,12 +28,12 @@ export default function EditBanca({ banca }) {
     observacao: banca.observacao || "",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await axios.put(`/api/bancas/${banca.id}`, form);

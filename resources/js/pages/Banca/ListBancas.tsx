@@ -13,20 +13,29 @@ import {
   TableCell,
 } from "@/components/ui/table";
 
+interface Banca {
+  id: number;
+  nome: string;
+  valor_inicial: string;
+  saldo_atual?: string;
+  data_inicio?: string;
+  observacao?: string;
+}
+
 export default function ListBancas() {
-  const [bancas, setBancas] = useState([]);
+  const [bancas, setBancas] = useState<Banca[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchBancas = () => {
     setLoading(true);
     axios
-      .get("/api/bancas")
+      .get<Banca[]>("/api/bancas")
       .then((res) => setBancas(res.data))
       .catch(() => toast.error("Erro ao carregar bancas"))
       .finally(() => setLoading(false));
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     if (!confirm("Tem certeza que deseja excluir esta banca?")) return;
     try {
       await axios.delete(`/api/bancas/${id}`);
@@ -70,7 +79,7 @@ export default function ListBancas() {
                 <TableRow key={banca.id}>
                   <TableCell>{banca.nome}</TableCell>
                   <TableCell>R$ {parseFloat(banca.valor_inicial).toFixed(2)}</TableCell>
-                  <TableCell>R$ {parseFloat(banca.saldo_atual || 0).toFixed(2)}</TableCell>
+                  <TableCell>R$ {parseFloat(banca.saldo_atual || "0").toFixed(2)}</TableCell>
                   <TableCell>
                     {banca.data_inicio
                       ? new Date(banca.data_inicio).toLocaleDateString()

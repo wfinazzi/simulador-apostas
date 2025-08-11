@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
-interface Aposta {
+interface Bet {
   id: number;
   time_casa: string;
   time_visitante: string;
@@ -32,12 +32,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function BetsList() {
-  const [apostas, setApostas] = useState<Aposta[]>([]);
+  const [apostas, setApostas] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchApostas = () => {
     setLoading(true);
-    axios.get("/api/bets")
+    axios.get<Bet[]>("/api/bets")
       .then((res) => setApostas(res.data))
       .catch(() => toast.error("Erro ao buscar apostas"))
       .finally(() => setLoading(false));

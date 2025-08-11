@@ -7,22 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { NumericFormat } from "react-number-format";
+
+interface Banca {
+  id: number;
+  nome: string;
+  valor_inicial: string;
+}
+
+interface TipoAposta {
+  id: number;
+  nome: string;
+}
+
+interface Status {
+  id: number;
+  nome: string;
+}
 
 export default function EditBet() {
   const pathParts = window.location.pathname.split("/");
   const id = pathParts[pathParts.indexOf("bets") + 1];
 
-  const [bancas, setBancas] = useState([]);
-  const [tiposApostas, setTiposApostas] = useState([]);
-  const [status, setStatus] = useState([]);
+  const [bancas, setBancas] = useState<Banca[]>([]);
+  const [tiposApostas, setTiposApostas] = useState<TipoAposta[]>([]);
+  const [status, setStatus] = useState<Status[]>([]);
   const [form, setForm] = useState({
     banca_id: "",
     user_id: "",
@@ -43,13 +53,14 @@ export default function EditBet() {
     comentario: "",
   });
 
-  console.log(status);
+  // Remover console.log desnecessário
+  // console.log(status);
 
   useEffect(() => {
-    axios.get("/api/bancas").then((res) => setBancas(res.data));
-    axios.get("/api/tipos_apostas").then((res) => setTiposApostas(res.data));
+    axios.get<Banca[]>("/api/bancas").then((res) => setBancas(res.data));
+    axios.get<TipoAposta[]>("/api/tipos_apostas").then((res) => setTiposApostas(res.data));
 
-    axios.get("/api/apostas/status").then((res) => setStatus(res.data));
+    axios.get<Status[]>("/api/apostas/status").then((res) => setStatus(res.data));
     axios
       .get(`/api/bets/${id}`)
       .then((res) => {
@@ -62,31 +73,29 @@ export default function EditBet() {
       .catch(() => toast.error("Erro ao carregar dados da aposta"));
   }, [id]);
 
-
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAmountChange = (values) => {
-    const amount = values.floatValue || 0;
-    setForm((prev) => {
-      const banca = bancas.find((b) => String(b.id) === prev.banca_id);
-      const bancaValor = banca ? parseFloat(banca.valor_inicial) : 0;
-      const relacao = bancaValor > 0 ? ((amount / bancaValor) * 100).toFixed(2) : "";
-      return { ...prev, amount, stake: amount, relacao_com_banca: relacao };
-    });
+  const handleAmountChange = (values: { floatValue?: number }) => {
+    const amountValue = values.floatValue || 0;
+    setForm((prev) => ({
+      ...prev,
+      amount: String(amountValue),
+      stake: String(amountValue),
+    }));
   };
 
-  const handleOddChange = (values) => {
+  const handleOddChange = (values: { value: string }) => {
     setForm((prev) => ({ ...prev, odd_at_bet: values.value }));
   };
 
-  const handleReturnAmountChange = (values) => {
+  const handleReturnAmountChange = (values: { value: string }) => {
     setForm((prev) => ({ ...prev, return_amount: values.value, valor_lucro_prejuizo: values.value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await axios.put(`/api/bets/${id}`, form);
@@ -195,16 +204,15 @@ export default function EditBet() {
             />
           </div>
 
-         <div>
+          <div>
             <Label>Resultado</Label>
             <Select
               value={form.status_id}
               onValueChange={(val) => setForm((prev) => ({ ...prev, status_id: val }))}
+              required
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o resultado">
-                  {status.find((s) => String(s.id) === form.status_id)?.nome}
-                </SelectValue>
+                <SelectValue placeholder="Selecione um resultado" />
               </SelectTrigger>
               <SelectContent>
                 {status.map((s) => (
@@ -231,7 +239,11 @@ export default function EditBet() {
 
           <div>
             <Label>Comentário</Label>
-            <Textarea name="comentario" value={form.comentario} onChange={handleChange} />
+            <Textarea
+              name="comentario"
+              value={form.comentario}
+              onChange={handleChange}
+            />
           </div>
 
           <div className="text-right">

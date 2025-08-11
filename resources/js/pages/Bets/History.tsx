@@ -4,8 +4,21 @@ import axios from "axios";
 import { toast } from "sonner";
 import AppLayout from "@/layouts/app-layout";
 
+interface TipoAposta {
+  nome: string;
+  total: number;
+}
+
+interface Stats {
+  total_apostado: number;
+  total_lucro: number;
+  total_prejuizo: number;
+  saldo_geral: number;
+  por_tipo?: TipoAposta[];
+}
+
 export default function History() {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
